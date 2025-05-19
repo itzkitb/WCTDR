@@ -15,7 +15,8 @@ import lol.sillyapps.WCTDR.scenes.MainMenu;
 
 public class Main extends ApplicationAdapter {
     private Engine engine;
-    private String screenUUID;
+    public  static final String version = "1.1";
+    public  static AudioEngine audioEngine = new AudioEngine();
 
     @Override
     public void create() {
@@ -26,20 +27,24 @@ public class Main extends ApplicationAdapter {
         engine = new Engine();
         engine.Initialize();
 
+        // Settings
+        Settings.LoadSettings();
+
         // Create a new screen and set its background
-        screenUUID = engine.AddScreen();
+        engine.AddScreen();
         engine.SetSceneBackground(Color.BLACK);
 
         // Little delay
         Delay(2000);
 
         // Intro
-        IntroLogo.Show(engine);
+        IntroLogo logo = new IntroLogo(engine);
+        logo.show();
     }
 
     public static void AfterLogo(String screenUUID, Engine engine) {
         engine.ChangeScreen(screenUUID);
-        MainMenu.Show(engine);
+        new MainMenu().Show(engine);
     }
 
     public void RenderMenu(String screenUUID) {
@@ -48,6 +53,8 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
+        audioEngine.update(Gdx.graphics.getDeltaTime());
+
         // Render the scene via the engine.
         engine.Render();
     }

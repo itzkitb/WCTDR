@@ -1,80 +1,99 @@
 package lol.sillyapps.WCTDR.scenes;
 
-import com.badlogic.gdx.Gdx;
+import static lol.sillyapps.WCTDR.Engine.Debug;
 import com.badlogic.gdx.graphics.Color;
 
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.ArrayList;
+import java.util.List;
 
 import lol.sillyapps.WCTDR.Engine;
 import lol.sillyapps.WCTDR.Main;
 
 public class IntroLogo {
-    private static int frame = 0;
-    private static float alpha = 1.0f;
-    private static float alpha_result = 0.0f;
-    private static float speed = 1.1f;
-    private static boolean stage = false;
-    private static boolean completed = false;
-    public  static Timer timer = new Timer();
+    private float alpha = 1.0f;
+    private boolean stage = false;
+    private final Engine engine;
+    private String currentScreen;
+    private String previousScreen;
+    private String logoImage;
+    private String logoText;
+    private boolean isAnimating = false;
 
-    public static void Show(Engine engine) {
-        String previousScreen = engine.GetCurrentScreen();
-        String screen = engine.AddScreen();
-        String image = engine.AddImage(GetPath(0), screen, (Gdx.app.getGraphics().getWidth() - 50)/2, (Gdx.app.getGraphics().getHeight() - 50)/2, 0, 50, 50, 0, 0);
-        String text = engine.AddText("SillyApps", "fonts/consolas.fnt", screen, (Gdx.app.getGraphics().getWidth()-67)/2, Gdx.app.getGraphics().getHeight()/2-30, 100, 0.5f, 0, new Color(1f, 1f, 1f, 1f));
-        engine.ChangeScreen(screen);
-        engine.SetSceneBackground(Color.BLACK);
-
-        TimerTask task = new TimerTask() {
-            public void run() {
-                Gdx.app.postRunnable(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (completed) {
-                            System.out.println("[IntroLogo.java] completed!");
-                            timer.cancel();
-                            Main.AfterLogo(previousScreen, engine);
-                            return;
-                        }
-
-                        ++frame;
-                        alpha /= speed;
-                        if (frame > 49) frame = 0;
-
-                        engine.ChangeImage(image, GetPath(frame));
-                        engine.SetItemAlpha(image, alpha_result);
-                        engine.SetItemAlpha(text, alpha_result);
-
-                        if (alpha <= 0.001f) {
-                            if (!stage) {
-                                stage = true;
-                                alpha = 1f;
-                            } else {
-                                completed = true;
-                            }
-                        }
-
-                        if (stage) {
-                            alpha_result = alpha;
-                        } else {
-                            alpha_result = 1f - alpha;
-                        }
-
-                        System.out.println("c: " + completed + ", a: " + alpha + ", ar: " + alpha_result + ", s: " + stage);
-                    }
-                });
-            }
-        };
-
-        timer = new Timer("Timer");
-
-        long delay = 40L;
-        timer.schedule(task, delay, delay);
+    public IntroLogo(Engine engine) {
+        this.engine = engine;
     }
 
-    private static String GetPath(int frame) {
+    public void show() {
+        previousScreen = engine.GetCurrentScreen();
+        currentScreen = engine.AddScreen();
+
+        List<String> framePaths = new ArrayList<>();
+
+        for (int i = 0; i < 50; i++)
+        {
+            framePaths.add(getFramePath(i));
+        }
+
+        logoImage = engine.AddAnimatedImage(
+            framePaths,
+            currentScreen,
+            0,
+            0,
+            0,
+            50,
+            50,
+            0,
+            0,
+            0.1f
+        );
+        engine.SetItemAlignment(logoImage, Engine.Alignment.CENTER);
+
+        logoText = engine.AddText(
+            "SillyApps",
+            "fonts/consolas.fnt",
+            currentScreen,
+            0,
+            -20,
+            100,
+            0.5f,
+            0,
+            new Color(1f, 1f, 1f, 1f)
+        );
+        engine.SetItemAlignment(logoText, Engine.Alignment.CENTER);
+
+        engine.ChangeScreen(currentScreen);
+        engine.SetSceneBackground(Color.BLACK);
+
+        startAnimation();
+    }
+
+    private void startAnimation() {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        engine.SetItemAlpha(logoImage, 0f);
+        engine.SetItemAlpha(logoText, 0f);
+
+        engine.new Animator().Alpha(logoText, 1f, 1f, () -> {});
+        engine.new Animator().Alpha(logoImage, 1f, 1f, () -> {
+
+            engine.new Animator().Alpha(logoText, 0f, 2f, () -> {});
+            engine.new Animator().Alpha(logoImage, 0f, 2f, () -> {
+                Debug("Animation completed!", "IntroLogo");
+                Main.AfterLogo(previousScreen, engine);
+            });
+        });
+    }
+
+    private float calculateAlpha(float targetAlpha, float progress) {
+        if (!stage) {
+            return 1f - (progress * alpha);
+        } else {
+            return targetAlpha * progress;
+        }
+    }
+
+    private String getFramePath(int frame) {
         return "lmao/" + frame + ".png";
     }
 }
