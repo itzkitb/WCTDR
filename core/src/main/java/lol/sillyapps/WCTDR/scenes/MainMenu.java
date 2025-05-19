@@ -20,7 +20,7 @@ public class MainMenu {
     private List<String> menuItemsList = new ArrayList<>();
     private List<String> clouds = new ArrayList<>();
     private String  currentScreen = "main";
-    private boolean changingScreen = true;
+    private boolean changingScreen = false;
     public  Timer   timer = new Timer();
     private boolean completed = false;
     private boolean Disposed = false;
@@ -42,6 +42,7 @@ public class MainMenu {
         if (Disposed) return;
         engine = engine_global;
         setupScreen();
+        engine.SetSceneBackground(new Color(103f / 255f, 107f / 255f, 127f / 255f, 1f));
 
         InititalizeMenu();
         InitializeAbout();
@@ -59,9 +60,11 @@ public class MainMenu {
             1
         );
 
-        engine.new Animator().Alpha(fadein, 0f, 1f, ()->{});
+        engine.new Animator().Alpha(fadein, 0f, 0.5f, ()->{
+            engine.new Animator().Alpha(fadein, 0f, 1f, () -> {});
+        });
 
-        scheduleAnimationTimer();
+        StageTwo();
     }
 
     private void setupScreen() {
@@ -71,74 +74,6 @@ public class MainMenu {
         engine.DeleteScreen(previousScreen);
         engine.ChangeScreen(newScreen);
         engine.SetSceneBackground(Color.BLACK);
-    }
-
-    private void scheduleAnimationTimer() {
-        if (Disposed) return;
-        timer.cancel();
-
-        TimerTask task = createAnimationTask();
-        timer = new Timer("AnimationTimer");
-        long delay = 40L;
-        timer.schedule(task, delay, delay);
-    }
-
-    private TimerTask createAnimationTask() {
-        if (Disposed) return null;
-
-        return new TimerTask() {
-            private boolean stageTwoStarted;
-            private float alpha = 1.0f;
-            private final float speed = 1.05f;
-
-            @Override
-            public void run() {
-                Gdx.app.postRunnable(() -> {
-                    if (completed) {
-                        cancelAnimation();
-                        return;
-                    }
-
-                    alpha /= speed;
-                    float ralpha = 1.0f - alpha;
-
-                    if (alpha < ALPHA_THRESHOLD) {
-                        finishAnimation();
-                        return;
-                    }
-
-                    updateStageTwo(engine, ralpha);
-                });
-            }
-
-            private void cancelAnimation() {
-                Debug("Intro completed!", "MainMenu");
-                timer.cancel();
-            }
-
-            private void finishAnimation() {
-                if (Disposed) return;
-
-                changingScreen = false;
-                completed = true;
-            }
-
-            private void updateStageTwo(Engine engine, float ralpha) {
-                if (Disposed) return;
-
-                if (!stageTwoStarted && alpha < STAGE_TWO_TRIGGER) {
-                    stageTwoStarted = true;
-                    StageTwo();
-                }
-
-                engine.SetSceneBackground(new Color(
-                    ralpha * COLOR_R,
-                    ralpha * COLOR_G,
-                    ralpha * COLOR_B,
-                    1.0f
-                ));
-            }
-        };
     }
 
     private void InititalizeMenu()
@@ -171,16 +106,19 @@ public class MainMenu {
             50,
             "Settings",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 ChangeScreen("settings");
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
                 Debug("Settings pressed: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/hovered.png");
                 Debug("Settings hovered: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/normal.png");
                 Debug("Settings leaved: " + btn.uuid, "MainMenu");
             }
@@ -199,16 +137,19 @@ public class MainMenu {
             50,
             "About",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 ChangeScreen("about");
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
                 Debug("About pressed: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/hovered.png");
                 Debug("About hovered: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/normal.png");
                 Debug("About leaved: " + btn.uuid, "MainMenu");
             }
@@ -255,6 +196,7 @@ public class MainMenu {
             50,
             "Start",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 changingScreen = true;
 
@@ -270,17 +212,28 @@ public class MainMenu {
                     0
                 );
 
-                Main.audioEngine.fadeOut(backgroundMusic, 0.5f, ()->{ Debug("123", "lol"); });
-                engine.new Animator().Alpha(fadeout, 1f, 0.5f, () -> { Dispose(); new Game().Main(engine); });
+                if (Settings.Music) {
+                    Main.audioEngine.fadeOut(backgroundMusic, 0.5f, () -> {
+
+                    });
+                }
+                engine.new Animator().Alpha(fadeout, 1f, 0.5f, () -> {
+                    engine.SetSceneBackground(Color.BLACK);
+                    Dispose();
+                    engine.DeleteScreen(engine.GetCurrentScreen());
+                    new Game().Main(engine);
+                });
 
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
                 Debug("Start pressed: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/hovered.png");
                 Debug("Start hovered: " + btn.uuid, "MainMenu");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/normal.png");
                 Debug("Start leaved: " + btn.uuid, "MainMenu");
             }
@@ -372,16 +325,19 @@ public class MainMenu {
             50,
             "Back",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 ChangeScreen("main");
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
                 Debug("Back pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/hovered.png");
                 Debug("Back hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/normal.png");
                 Debug("Back leaved: " + btn.uuid, "About");
             }
@@ -429,16 +385,19 @@ public class MainMenu {
             50,
             "Back",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 ChangeScreen("main");
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
                 Debug("Back pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/hovered.png");
                 Debug("Back hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, "button/normal.png");
                 Debug("Back leaved: " + btn.uuid, "About");
             }
@@ -456,6 +415,7 @@ public class MainMenu {
             50,
             "VSync",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 Settings.VSync = !Settings.VSync;
                 Settings.SaveSettings();
@@ -463,10 +423,12 @@ public class MainMenu {
                 Debug("Vsync pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetHoverStatus(Settings.VSync));
                 Debug("Vsync hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetStatus(Settings.VSync));
                 Debug("Vsync leaved: " + btn.uuid, "About");
             }
@@ -484,6 +446,7 @@ public class MainMenu {
             50,
             "Clouds",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 Settings.Clouds = !Settings.Clouds;
 
@@ -500,10 +463,12 @@ public class MainMenu {
                 Debug("Clouds pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetHoverStatus(Settings.Clouds));
                 Debug("Clouds hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetStatus(Settings.Clouds));
                 Debug("Clouds leaved: " + btn.uuid, "About");
             }
@@ -521,6 +486,7 @@ public class MainMenu {
             50,
             "Music",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 PressButton();
                 Settings.Music = !Settings.Music;
                 Settings.SaveSettings();
@@ -539,10 +505,12 @@ public class MainMenu {
                 Debug("Music pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetHoverStatus(Settings.Music));
                 Debug("Music hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetStatus(Settings.Music));
                 Debug("Music leaved: " + btn.uuid, "About");
             }
@@ -560,6 +528,7 @@ public class MainMenu {
             50,
             "Sounds",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 Settings.Sounds = !Settings.Sounds;
                 Settings.SaveSettings();
                 PressButton();
@@ -567,10 +536,12 @@ public class MainMenu {
                 Debug("Sounds pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetHoverStatus(Settings.Sounds));
                 Debug("Sounds hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetStatus(Settings.Sounds));
                 Debug("Sounds leaved: " + btn.uuid, "About");
             }
@@ -588,6 +559,7 @@ public class MainMenu {
             50,
             "Buttons",
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 Settings.ScreenButtons = !Settings.ScreenButtons;
                 Settings.SaveSettings();
                 PressButton();
@@ -595,10 +567,12 @@ public class MainMenu {
                 Debug("ScreenButtons pressed: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetHoverStatus(Settings.ScreenButtons));
                 Debug("ScreenButtons hovered: " + btn.uuid, "About");
             },
             (Engine.Button btn) -> {
+                if (Disposed) return;
                 ChangeButtonImage(btn.uuid, GetStatus(Settings.ScreenButtons));
                 Debug("ScreenButtons leaved: " + btn.uuid, "About");
             }

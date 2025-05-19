@@ -47,10 +47,6 @@ public class Main extends ApplicationAdapter {
         new MainMenu().Show(engine);
     }
 
-    public void RenderMenu(String screenUUID) {
-
-    }
-
     @Override
     public void render() {
         audioEngine.update(Gdx.graphics.getDeltaTime());

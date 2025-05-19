@@ -73,7 +73,7 @@ public class AudioEngine {
         if (mm != null) {
             mm.music.setVolume(volume);
             mm.currentVolume = volume;
-            Debug("Volume for " + uuid + " is " + volume);
+            //Debug("Volume for " + uuid + " is " + volume);
         }
     }
 

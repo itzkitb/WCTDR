@@ -44,9 +44,10 @@ public class Engine {
     private Array<Runnable> pendingTasks = new Array<>();
     private World world;
     private static final float PPM = 100f;
+    private static double frames = 0;
 
     public static void Debug(String text, String sector) {
-        System.out.printf("[%s] [%s] %s%n", sector, new SimpleDateFormat("HH:mm.ss.SS").format(Calendar.getInstance().getTime()), text);
+        System.out.printf("[%s] [%s] [%s] %s%n", sector, frames, new SimpleDateFormat("HH:mm.ss.SS").format(Calendar.getInstance().getTime()), text);
     }
 
 /*
@@ -132,23 +133,14 @@ public class Engine {
 
     // Deletes a screen by UUID
     public void DeleteScreen(String uuid) {
-
-        List<RenderableItem> items = screens.get(uuid).items;
-
-        for (RenderableItem item: items) {
-            if (item instanceof Button)
-            {
-                ((Button) item).onClick = null;
-                ((Button) item).onHover = null;
-                ((Button) item).onLeave = null;
-            }
-        }
-
         if (screens.containsKey(uuid)) {
+            screens.get(uuid).bgColor = Color.BLACK;
+
             screens.remove(uuid);
             if (uuid.equals(currentScreenUUID)) {
                 currentScreenUUID = screens.isEmpty() ? null : screens.keySet().iterator().next();
             }
+            ClearScene(uuid);
         }
 
         Debug(String.format("Screen %s removed!", uuid), "ENGINE");
@@ -244,6 +236,8 @@ public class Engine {
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                if (screens.get(sceneUUID) == null) return false;
+
                 Vector3 worldPos = camera.unproject(new Vector3(screenX, screenY, 0));
                 if (btn.isPressed(worldPos.x, worldPos.y) && btn.alpha != 0) {
                     onClick.accept(btn);
@@ -254,6 +248,7 @@ public class Engine {
 
             @Override
             public boolean mouseMoved(int screenX, int screenY) {
+                if (screens.get(sceneUUID) == null) return false;
                 if (btn.alpha == 0) return false;
 
                 Vector3 worldPos = camera.unproject(new Vector3(screenX, screenY, 0));
@@ -269,6 +264,7 @@ public class Engine {
 
             @Override
             public boolean touchDragged(int screenX, int screenY, int pointer) {
+                if (screens.get(sceneUUID) == null) return false;
                 if (btn.alpha == 0) return false;
 
                 Vector3 worldPos = camera.unproject(new Vector3(screenX, screenY, 0));
@@ -441,6 +437,7 @@ public class Engine {
 
     // Called from the render() method of the main application class
     public void Render() {
+        frames++;
         if (currentScreenUUID == null || !screens.containsKey(currentScreenUUID)) {
             Debug("No screens found for rendering!", "ENGINE");
             return;
@@ -453,7 +450,7 @@ public class Engine {
         batch.setProjectionMatrix(camera.combined);
 
         // Clear using the current background color
-        Color bg = currentScreen.bgColor != null ? currentScreen.bgColor : new Color(0, 0, 0, 1);
+        Color bg = currentScreen.bgColor != null && !currentScreen.items.isEmpty() ? currentScreen.bgColor : new Color(0, 0, 0, 1);
         ScreenUtils.clear(bg.r, bg.g, bg.b, bg.a);
 
         Iterator<Animation> it = animations.iterator();
@@ -566,7 +563,7 @@ public class Engine {
 
         public void Alpha(String itemUUID, float targetAlpha, float duration, Runnable onComplete) {
             RenderableItem item = items.get(itemUUID);
-            Debug("Started alpha animation for item: " + itemUUID + ", ta: " + targetAlpha, "ENGINE");
+            //Debug("Started alpha animation for item: " + itemUUID + ", ta: " + targetAlpha, "ENGINE");
             if (item != null) {
                 lol.sillyapps.WCTDR.Engine.Animation anim = new lol.sillyapps.WCTDR.Engine.Animation();
                 anim.type = lol.sillyapps.WCTDR.Engine.Animation.Type.ALPHA;
