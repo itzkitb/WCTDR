@@ -58,7 +58,7 @@ configure(subprojects) {
 
 subprojects {
   version = '$projectVersion'
-  ext.appName = 'WHO CREATED THIS DISGUSTING ROCKET?'
+  ext.appName = 'WCTDR'
   repositories {
     mavenCentral()
     maven { url 'https://s01.oss.sonatype.org' }
@@ -70,4 +70,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'WHO CREATED THIS DISGUSTING ROCKET?' + '-parent'
+eclipse.project.name = 'WCTDR' + '-parent'

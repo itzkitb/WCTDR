@@ -315,26 +315,6 @@ public class Game {
             rocketPos.x += rocketVelocity.x;
             rocketPos.y += rocketVelocity.y;
 
-            /*
-            float angle;
-            float epsilon = 0.01f;
-
-            if (Math.sqrt(rocketVelocity.x * rocketVelocity.x + rocketVelocity.y * rocketVelocity.y) < epsilon) {
-                angle = 0f;
-            } else {
-                float adjustedY = -rocketVelocity.y;
-
-                angle = (float) Math.atan2(adjustedY, rocketVelocity.x) * MathUtils.radiansToDegrees;
-
-                //angle -= 90f;
-                if (rocketVelocity.x < 0) {
-                    angle += 180f;
-                }
-            }
-
-            engine.SetItemRotation(rocket, angle);
-            */
-
             engine.SetItemPosition(rocket, rocketPos.x, rocketPos.y);
 
             engine.SetItemPosition(distanceText, 0, rocketPos.y - 10 + 100);
@@ -450,7 +430,7 @@ public class Game {
             Main.audioEngine.playSound(sound, 1f);
         }
 
-        Statistics.Credits += (int)(distance / 100 / timeElapsed * 500);
+        Statistics.Credits += (int)(distance / 100f / timeElapsed * 10000f);
         if(distance > Statistics.BestRecord) {
             Statistics.BestRecord = (int)distance;
         }
@@ -481,7 +461,7 @@ public class Game {
         String stats = engine.AddText(
             "Пройдено: " + (int)distance + "м\n" +
                 "Время: " + (int)timeElapsed + "с\n" +
-                "Кредиты: " + (int)(distance / 100 * timeElapsed * 500) + "\n" +
+                "Кредиты: " + (int)(distance / 100f / timeElapsed * 10000f) + "\n" +
                 "Рекорд: " + Statistics.BestRecord + "м",
             "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),

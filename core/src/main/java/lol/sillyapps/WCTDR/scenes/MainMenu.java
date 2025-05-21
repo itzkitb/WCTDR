@@ -547,7 +547,7 @@ public class MainMenu {
             }
         );
         items.add(sounds);
-
+        /*
         String screenButtons = engine.AddButton(
             GetStatus(Settings.ScreenButtons),
             "fonts/tiny5.fnt",
@@ -578,6 +578,7 @@ public class MainMenu {
             }
         );
         items.add(screenButtons);
+        */
 
         engine.SetItemAlignment(title, Engine.Alignment.TOP_CENTER);
         engine.SetItemAlignment(back, Engine.Alignment.BOTTOM_LEFT);
@@ -585,7 +586,7 @@ public class MainMenu {
         engine.SetItemAlignment(clouds, Engine.Alignment.CENTER);
         engine.SetItemAlignment(music, Engine.Alignment.CENTER);
         engine.SetItemAlignment(sounds, Engine.Alignment.CENTER);
-        engine.SetItemAlignment(screenButtons, Engine.Alignment.CENTER);
+        //engine.SetItemAlignment(screenButtons, Engine.Alignment.CENTER);
 
         engine.SetItemAlpha(title, 0);
         engine.SetItemAlpha(vsync, 0);
@@ -593,7 +594,7 @@ public class MainMenu {
         engine.SetItemAlpha(clouds, 0);
         engine.SetItemAlpha(music, 0);
         engine.SetItemAlpha(sounds, 0);
-        engine.SetItemAlpha(screenButtons, 0);
+        //engine.SetItemAlpha(screenButtons, 0);
 
         scenes.put("settings", items);
 
