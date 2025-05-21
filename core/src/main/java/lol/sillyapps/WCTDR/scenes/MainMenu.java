@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
+
 import lol.sillyapps.WCTDR.Main;
 import lol.sillyapps.WCTDR.Engine;
 import lol.sillyapps.WCTDR.Settings;
@@ -97,7 +97,7 @@ public class MainMenu {
 
         String settingsButton = engine.AddButton(
             "button/normal.png",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             10,
             -Gdx.app.getGraphics().getHeight()-50-10-50,
@@ -128,7 +128,7 @@ public class MainMenu {
 
         String aboutButton = engine.AddButton(
             "button/normal.png",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             10,
             -Gdx.app.getGraphics().getHeight()-50,
@@ -174,7 +174,7 @@ public class MainMenu {
 
         String copyrightText = engine.AddText(
             "(C) 2025 SillyApps | v." + Main.version,
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             -10,
             -Gdx.app.getGraphics().getHeight(),
@@ -187,7 +187,7 @@ public class MainMenu {
 
         String startButton = engine.AddButton(
             "button/normal.png",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             10,
             -Gdx.app.getGraphics().getHeight()-50-10-10-50-50,
@@ -221,7 +221,7 @@ public class MainMenu {
                     engine.SetSceneBackground(Color.BLACK);
                     Dispose();
                     engine.DeleteScreen(engine.GetCurrentScreen());
-                    new Game().Main(engine);
+                    new GameStart().Main(engine);
                 });
 
                 ChangeButtonImage(btn.uuid, "button/pressed.png");
@@ -290,10 +290,10 @@ public class MainMenu {
         List<String> items = new ArrayList<>();
         String title = engine.AddText(
             "About",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
-            -10,
+            -20,
             10,
             1f,
             0,
@@ -303,10 +303,10 @@ public class MainMenu {
 
         String text = engine.AddText(
             "Game by megableh\n\nLibraries:\n- java.util,\n- java.text,\n- com.badlogic.gdx\n\n<3",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
-            200,
+            0,
             10,
             1f,
             0,
@@ -316,7 +316,7 @@ public class MainMenu {
 
         String back = engine.AddButton(
             "button/normal.png",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             10,
             10,
@@ -363,10 +363,10 @@ public class MainMenu {
         List<String> items = new ArrayList<>();
         String title = engine.AddText(
             "Settings",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
-            -10,
+            -20,
             10,
             1f,
             0,
@@ -376,7 +376,7 @@ public class MainMenu {
 
         String back = engine.AddButton(
             "button/normal.png",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             10,
             10,
@@ -406,7 +406,7 @@ public class MainMenu {
 
         String vsync = engine.AddButton(
             GetStatus(Settings.VSync),
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
             60+60,
@@ -437,7 +437,7 @@ public class MainMenu {
 
         String clouds = engine.AddButton(
             GetStatus(Settings.Clouds),
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
             60,
@@ -477,7 +477,7 @@ public class MainMenu {
 
         String music = engine.AddButton(
             GetStatus(Settings.Music),
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
             0,
@@ -519,7 +519,7 @@ public class MainMenu {
 
         String sounds = engine.AddButton(
             GetStatus(Settings.Sounds),
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
             -60,
@@ -550,7 +550,7 @@ public class MainMenu {
 
         String screenButtons = engine.AddButton(
             GetStatus(Settings.ScreenButtons),
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             engine.GetCurrentScreen(),
             0,
             -120,

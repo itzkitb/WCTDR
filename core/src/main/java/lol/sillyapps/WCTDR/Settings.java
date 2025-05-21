@@ -4,26 +4,31 @@ import java.io.*;
 import java.util.Properties;
 
 public class Settings {
-    public static boolean VSync = false;
-    public static boolean Clouds = false;
-    public static boolean Music = false;
-    public static boolean Sounds = false;
+    public static boolean VSync = true;
+    public static boolean Clouds = true;
+    public static boolean Music = true;
+    public static boolean Sounds = true;
     public static boolean ScreenButtons = false;
     public static int MusicLevel = 0;
     public static int SoundsLevel = 0;
 
-    private static final String SETTINGS_FILE = "settings.properties";
+    private static final String SETTINGS_FILE = "user.data";
 
     public static void LoadSettings() {
         Properties props = new Properties();
-        File file = new File(System.getProperty("user.SETTINGS"), SETTINGS_FILE);
+        File file = new File(System.getProperty("SETTINGS"), SETTINGS_FILE);
 
         try (InputStream is = new FileInputStream(file)) {
             if (file.exists()) {
                 props.load(is);
             }
+            else
+            {
+                SaveSettings();
+            }
         } catch (IOException e) {
             e.printStackTrace();
+            SaveSettings();
         }
 
         // Load values with defaults
@@ -46,7 +51,7 @@ public class Settings {
         props.setProperty("SoundsLevel", String.valueOf(SoundsLevel));
         props.setProperty("ScreenButtons", String.valueOf(ScreenButtons));
 
-        File file = new File(System.getProperty("user.SETTINGS"), SETTINGS_FILE);
+        File file = new File(System.getProperty("SETTINGS"), SETTINGS_FILE);
 
         try (OutputStream os = new FileOutputStream(file)) {
             props.store(os, "Application Settings");

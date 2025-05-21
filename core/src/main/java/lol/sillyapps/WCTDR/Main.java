@@ -30,6 +30,9 @@ public class Main extends ApplicationAdapter {
         // Settings
         Settings.LoadSettings();
 
+        // Data
+        Statistics.Load();
+
         // Create a new screen and set its background
         engine.AddScreen();
         engine.SetSceneBackground(Color.BLACK);

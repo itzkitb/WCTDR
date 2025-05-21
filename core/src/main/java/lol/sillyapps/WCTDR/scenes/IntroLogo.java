@@ -50,10 +50,10 @@ public class IntroLogo {
 
         logoText = engine.AddText(
             "SillyApps",
-            "fonts/consolas.fnt",
+            "fonts/tiny5.fnt",
             currentScreen,
             0,
-            -20,
+            -30,
             100,
             0.5f,
             0,
@@ -83,14 +83,6 @@ public class IntroLogo {
                 Main.AfterLogo(previousScreen, engine);
             });
         });
-    }
-
-    private float calculateAlpha(float targetAlpha, float progress) {
-        if (!stage) {
-            return 1f - (progress * alpha);
-        } else {
-            return targetAlpha * progress;
-        }
     }
 
     private String getFramePath(int frame) {

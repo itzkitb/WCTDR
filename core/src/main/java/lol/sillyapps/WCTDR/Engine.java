@@ -39,15 +39,19 @@ public class Engine {
     private final int IMAGE_CACHE_CAPACITY = 50;
     private Set<String> allowedAssets;
     private List<Animation> animations = new ArrayList<>();
-    private InputMultiplexer inputMultiplexer = new InputMultiplexer();
+    public InputMultiplexer inputMultiplexer = new InputMultiplexer();
     private List<Button> buttons = new ArrayList<>();
     private Array<Runnable> pendingTasks = new Array<>();
-    private World world;
-    private static final float PPM = 100f;
     private static double frames = 0;
+    private Vector2 sceneOffset = new Vector2(0, 0);
+    private UpdateCallback updateCallback;
 
     public static void Debug(String text, String sector) {
         System.out.printf("[%s] [%s] [%s] %s%n", sector, frames, new SimpleDateFormat("HH:mm.ss.SS").format(Calendar.getInstance().getTime()), text);
+    }
+
+    public interface UpdateCallback {
+        void onUpdate(float delta);
     }
 
 /*
@@ -194,7 +198,7 @@ public class Engine {
         BitmapFont font;
         if (fontPath != null) {
             // Load
-            Sprite texture = new Sprite(new Texture(Gdx.files.internal("fonts/consolas_0.png")));
+            Sprite texture = new Sprite(new Texture(Gdx.files.internal(fontPath.replace(".fnt", "_0.png"))));
             font = new BitmapFont(Gdx.files.internal(fontPath), texture);
             font.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             font.getData().setScale(fontSize);
@@ -203,7 +207,7 @@ public class Engine {
             font = new BitmapFont();
         }
         TextItem textItem = new TextItem(UUID.randomUUID().toString(), x, y, z, rotation, 1.0f,
-            text, font, textColor);
+            text, font, textColor, fontSize);
         items.put(textItem.uuid, textItem);
         screens.get(sceneUUID).items.add(textItem);
         Debug(String.format("Added new text witch font %s to scene %s: %s", fontPath, sceneUUID, textItem.uuid), "ENGINE");
@@ -239,6 +243,7 @@ public class Engine {
                 if (screens.get(sceneUUID) == null) return false;
 
                 Vector3 worldPos = camera.unproject(new Vector3(screenX, screenY, 0));
+                Debug("X: " + worldPos.x + ", Y: " + worldPos.y, "BUTTON");
                 if (btn.isPressed(worldPos.x, worldPos.y) && btn.alpha != 0) {
                     onClick.accept(btn);
                     return true;
@@ -307,33 +312,6 @@ public class Engine {
         return animatedItem.uuid;
     }
 
-    public String AddPhysicsObject(String assetPath, String sceneUUID, float x, float y, float z,
-                                   float width, float height, float rotation, float alpha,
-                                   float weight, float friction, float gravityScale) {
-        if (!allowedAssets.contains(assetPath)) {
-            throw new IllegalArgumentException("Asset " + assetPath + " не найден.");
-        }
-        Texture tex = imageCache.get(assetPath);
-        if (tex == null) {
-            tex = new Texture(Gdx.files.internal(assetPath));
-            imageCache.put(assetPath, tex);
-        }
-
-        PhysicsObject obj = new PhysicsObject(
-            UUID.randomUUID().toString(), x, y, z, rotation, alpha, width, height, assetPath, tex, world
-        );
-
-        // Настройка параметров
-        obj.getBody().setLinearDamping(1f - friction); // Скольжение
-        obj.getBody().getFixtureList().first().setDensity(weight); // Вес
-        obj.getBody().resetMassData(); // Применить изменения массы
-        obj.getBody().setGravityScale(gravityScale); // Масштаб гравитации
-
-        items.put(obj.uuid, obj);
-        screens.get(sceneUUID).items.add(obj);
-        return obj.uuid;
-    }
-
     // Deletes an item by UUID
     public void DeleteItem(String itemUUID) {
         RenderableItem item = items.get(itemUUID);
@@ -396,6 +374,13 @@ public class Engine {
         }
     }
 
+    public void SetItemRotation(String itemUUID, float angle) {
+        RenderableItem item = items.get(itemUUID);
+        if (item != null) {
+            item.rotation = angle;
+        }
+    }
+
     public RenderableItem GetItem(String itemUUID)
     {
         return items.get(itemUUID);
@@ -444,8 +429,19 @@ public class Engine {
         }
         Screen currentScreen = screens.get(currentScreenUUID);
 
+        if (updateCallback != null) {
+            updateCallback.onUpdate(Gdx.graphics.getDeltaTime());
+        }
+
         // Update the camera and set the projection matrix
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        camera.position.set(
+            camera.viewportWidth/2 + sceneOffset.x,
+            camera.viewportHeight/2 + sceneOffset.y,
+            0
+        );
+        //Debug("X: " + camera.position.x + ", Y: " + camera.position.y, "CAMERA");
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
@@ -493,10 +489,6 @@ public class Engine {
         }
         pendingTasks.clear();
 
-        if (world != null) {
-            world.step(1 / 60f, 6, 2);
-        }
-
         // Begin sprite batch drawing
         batch.begin();
         // Sort items by z-order
@@ -532,17 +524,55 @@ public class Engine {
         if (item != null) item.alignment = align;
     }
 
-/*
-    _______   ______   _______   ________  ________   _______  ________
-  //       \//      \ /       \\/        \/        \//       \/        \
- //        //       //        //        _/        _//        /        _/
-/       --/        //         /-        /-        /        _/-        /
-\________/\________/\___/____/\_______//\_______//\________/\_______//
+    public void SetUpdateCallback(UpdateCallback callback) {
+        this.updateCallback = callback;
+    }
 
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                                CLASSES
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-*/
+    public void ClearUpdateCallback() {
+        this.updateCallback = null;
+    }
+
+    public void SetItemPosition(String itemUUID, float x, float y) {
+        RenderableItem item = items.get(itemUUID);
+        if (item != null) {
+            item.x = x;
+            item.y = y;
+        }
+    }
+
+    public void SetSceneOffset(int x, float y) {
+        sceneOffset.set(x, y);
+        camera.position.set(camera.viewportWidth/2 + sceneOffset.x,
+            camera.viewportHeight/2 + sceneOffset.y, 0);
+        camera.update();
+    }
+
+    /*
+        _______   ______   _______   ________  ________   _______  ________
+      //       \//      \ /       \\/        \/        \//       \/        \
+     //        //       //        //        _/        _//        /        _/
+    /       --/        //         /-        /-        /        _/-        /
+    \________/\________/\___/____/\_______//\_______//\________/\_______//
+
+    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                    CLASSES
+    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    */
+    private class CameraAnimation {
+        Vector2 startOffset;
+        Vector2 targetOffset;
+        float duration;
+        float elapsedTime;
+        Runnable onComplete;
+
+        public CameraAnimation(Vector2 start, Vector2 target, float duration, Runnable onComplete) {
+            this.startOffset = start;
+            this.targetOffset = target;
+            this.duration = duration;
+            this.onComplete = onComplete;
+        }
+    }
+
     public class Animator {
         public void Move(String itemUUID, float targetX, float targetY, float duration, Runnable onComplete) {
             RenderableItem item = items.get(itemUUID);
@@ -607,59 +637,17 @@ public class Engine {
         }
     }
 
-    public class PhysicsObject extends ImageItem {
-        private Body body;
-        private World world;
-
-        public PhysicsObject(String uuid, float x, float y, float z, float rotation, float alpha,
-                             float width, float height, String assetPath, Texture texture, World world) {
-            super(uuid, x, y, z, rotation, alpha, width, height, assetPath, texture);
-            this.world = world;
-            createBody();
-        }
-
-        private void createBody() {
-            BodyDef bodyDef = new BodyDef();
-            bodyDef.type = BodyDef.BodyType.DynamicBody;
-            bodyDef.position.set(x / PPM, y / PPM);
-
-            body = world.createBody(bodyDef);
-
-            PolygonShape shape = new PolygonShape();
-            shape.setAsBox((width / 2) / PPM, (height / 2) / PPM);
-
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.shape = shape;
-            fixtureDef.density = 1f;
-            fixtureDef.friction = 0.3f;
-            fixtureDef.restitution = 0.5f;
-
-            body.createFixture(fixtureDef);
-            shape.dispose();
-        }
-
-        @Override
-        void render(SpriteBatch batch, OrthographicCamera camera) {
-            Vector2 pos = body.getPosition();
-            x = pos.x * PPM;
-            y = pos.y * PPM;
-            super.render(batch, camera);
-        }
-
-        public Body getBody() {
-            return body;
-        }
-    }
-
     // A text item is rendered using a BitmapFont
-    private static class TextItem extends RenderableItem {
-        String text;
-        BitmapFont font;
-        Color textColor;
+    public static class TextItem extends RenderableItem {
+        public String text;
+        public BitmapFont font;
+        public Color textColor;
+        public float size;
 
         TextItem(String uuid, float x, float y, float z, float rotation, float alpha,
-                 String text, BitmapFont font, Color textColor) {
+                 String text, BitmapFont font, Color textColor, float size) {
             super(uuid, x, y, z, rotation, alpha);
+            this.size = size;
             this.text = text;
             this.font = font;
             this.textColor = textColor;
@@ -677,37 +665,38 @@ public class Engine {
             layout.setText(font, text);
             float width = layout.width;
             float height = layout.height;
+            //Debug("w: " + width + ", h: " + height, "TEXT");
 
             float adjustedX = 0, adjustedY = 0;
 
             switch(alignment) {
                 case TOP_LEFT:
-                    adjustedY = viewportHeight - height;
+                    adjustedY = viewportHeight;
                     break;
                 case TOP_CENTER:
                     adjustedX = (viewportWidth - width) / 2;
-                    adjustedY = viewportHeight - height;
+                    adjustedY = viewportHeight;
                     break;
                 case TOP_RIGHT:
                     adjustedX = viewportWidth - width;
-                    adjustedY = viewportHeight - height;
+                    adjustedY = viewportHeight;
                     break;
                 case MIDDLE_LEFT:
-                    adjustedY = (viewportHeight - height) / 2;
+                    adjustedY = (viewportHeight + height) / 2;
                     break;
                 case CENTER:
                     adjustedX = (viewportWidth - width) / 2;
-                    adjustedY = (viewportHeight - height) / 2;
+                    adjustedY = (viewportHeight + height) / 2;
                     break;
                 case MIDDLE_RIGHT:
                     adjustedX = viewportWidth - width;
-                    adjustedY = (viewportHeight - height) / 2;
+                    adjustedY = (viewportHeight + height) / 2;
                     break;
                 case BOTTOM_LEFT:
                     adjustedY = 0;
                     break;
                 case BOTTOM_CENTER:
-                    adjustedX = (viewportWidth - width) / 2;
+                    adjustedX = (viewportWidth + width) / 2;
                     adjustedY = 0;
                     break;
                 case BOTTOM_RIGHT:
@@ -721,7 +710,7 @@ public class Engine {
         }
     }
 
-    public static class Button extends RenderableItem {
+    public class Button extends RenderableItem {
         public Consumer<Button> onClick;
         public Consumer<Button> onHover;
         public Consumer<Button> onLeave;
@@ -801,16 +790,39 @@ public class Engine {
 
             if (textItem != null) {
                 GlyphLayout layout = new GlyphLayout();
-                layout.setText(this.textItem.font, this.textItem.text);
+                BitmapFont font = textItem.font;
+                BitmapFont.BitmapFontData fontData = font.getData();
+
+                fontData.setScale(textItem.size);
+
+                layout.setText(font, textItem.text);
                 float txtWidth = layout.width;
                 float txtHeight = layout.height;
+
+                float scaleX = 1.0f;
+                float scaleY = 1.0f;
+
+                if (txtWidth > bounds.width - 60 || txtHeight > bounds.height) {
+                    scaleX = (bounds.width - 60) / txtWidth;
+                    scaleY = bounds.height / txtHeight;
+                    float scale = Math.min(scaleX, scaleY);
+                    if (scale < 1.0f) {
+                        fontData.setScale(scale);
+                    }
+                }
+
+                layout.setText(font, textItem.text);
+                txtWidth = layout.width;
+                txtHeight = layout.height;
 
                 textItem.x = bounds.x + (bounds.width - txtWidth) / 2;
                 textItem.y = bounds.y + (bounds.height - txtHeight) / 2 + txtHeight;
 
                 textItem.z = this.z + 1;
                 textItem.alpha = this.alpha;
-                textItem.render(batch, camera);
+                //textItem.render(batch, camera);
+
+                //fontData.setScale(oldWidth, oldHeight);
             }
             else
             {
@@ -823,7 +835,7 @@ public class Engine {
             this.x = x;
             this.y = y;
             */
-            bounds.set(x, y, width, height);
+            bounds.set(x - sceneOffset.x, y - sceneOffset.y, width, height);
         }
 
         public boolean isPressed(float worldX, float worldY) {
@@ -913,7 +925,7 @@ public class Engine {
         }
     }
 
-    private static class AnimatedImageItem extends ImageItem {
+    public static class AnimatedImageItem extends ImageItem {
         private com.badlogic.gdx.graphics.g2d.Animation<TextureRegion> animation;
         private float elapsedTime;
 
